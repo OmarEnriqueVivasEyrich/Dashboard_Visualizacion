@@ -17,6 +17,10 @@ if os.path.exists(file_path):
     # Cargar el archivo Parquet
     df = pd.read_parquet(file_path)
 
+    # Mostrar un resumen de las columnas para verificar
+    st.sidebar.write("Columnas disponibles en el dataset:")
+    st.sidebar.write(df.columns.tolist())
+
     # Filtrar los datos eliminando valores nulos en 'ESTU_DEPTO_RESIDE'
     df_filtrado = df.dropna(subset=['ESTU_DEPTO_RESIDE'])
 
@@ -63,44 +67,18 @@ if os.path.exists(file_path):
         else:
             st.warning("No hay departamentos seleccionados para mostrar el gráfico de puntajes.")
 
-    # Gráfico de comparativa entre mejor y peor departamento
-    with col2:
-        st.subheader(f'Comparativa entre Mejor y Peor Puntaje por Departamento: {selected_puntaje}')
-        df_comparativo = pd.DataFrame({
-            'Departamento': [mejor_departamento['ESTU_DEPTO_RESIDE'], peor_departamento['ESTU_DEPTO_RESIDE']],
-            'Puntaje': [mejor_departamento[selected_puntaje], peor_departamento[selected_puntaje]]
-        })
-        custom_palette = {mejor_departamento['ESTU_DEPTO_RESIDE']: '#006400', 
-                          peor_departamento['ESTU_DEPTO_RESIDE']: '#8B0000'}
-        plt.figure(figsize=(10, 6))
-        bar_plot = sns.barplot(data=df_comparativo, y='Departamento', x='Puntaje', palette=custom_palette)
-        plt.title(f'Comparativa entre Mejor y Peor Puntaje: {selected_puntaje}', fontsize=16, weight='bold')
-        plt.xlabel(f'Media del {selected_puntaje}', fontsize=14, fontweight='bold')
-        plt.ylabel('Departamento', fontsize=14, fontweight='bold')
-        bar_plot.set_yticklabels(bar_plot.get_yticklabels(), fontsize=14, fontweight='bold')
-        for p in bar_plot.patches:
-            value = round(p.get_width(), 2)
-            bar_plot.annotate(f'{value}', (p.get_width() / 2, p.get_y() + p.get_height() / 2.), ha='center', va='center', fontsize=14, fontweight='bold', color='white')
-        plt.tight_layout()
-        st.pyplot(plt)
-
     # Gráfico de radar para comparación entre mejor y peor departamento
-    with st.container():
+    radar_vars = ['FAMI_ESTRATOVIVIENDA', 'FAMI_EDUCACIONPADRE', 'FAMI_EDUCACIONMADRE',
+                  'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'FAMI_NUMLIBROS']
+    radar_vars = [col for col in radar_vars if col in df.columns]  # Filtrar variables existentes
+    if radar_vars:
         st.subheader(f'Gráfico de Radar: Comparativa entre Mejor y Peor Departamento')
-        radar_vars = ['FAMI_ESTRATOVIVIENDA', 'FAMI_EDUCACIONPADRE', 'FAMI_EDUCACIONMADRE', 
-                      'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'FAMI_NUMLIBROS']
-        radar_labels = [
-            'Estrato Vivienda', 'Educación Padre', 'Educación Madre',
-            'Internet en Hogar', 'Computadora', 'Número Libros'
-        ]
-
-        # Extraer datos normalizados
         normalizar = lambda x: (x - x.min()) / (x.max() - x.min())
         df_radar = df[radar_vars].apply(normalizar)
         mejor_data = df_radar.loc[df['ESTU_DEPTO_RESIDE'] == mejor_departamento['ESTU_DEPTO_RESIDE']].mean().tolist()
         peor_data = df_radar.loc[df['ESTU_DEPTO_RESIDE'] == peor_departamento['ESTU_DEPTO_RESIDE']].mean().tolist()
 
-        # Cerrar los datos para el gráfico de radar
+        # Preparar los datos para el gráfico de radar
         angles = np.linspace(0, 2 * np.pi, len(radar_vars), endpoint=False).tolist()
         mejor_data += mejor_data[:1]
         peor_data += peor_data[:1]
@@ -114,10 +92,12 @@ if os.path.exists(file_path):
         ax.fill(angles, peor_data, color='red', alpha=0.25)
 
         ax.set_xticks(angles[:-1])
-        ax.set_xticklabels(radar_labels, fontsize=10)
+        ax.set_xticklabels(radar_vars, fontsize=10)
         ax.set_title("Comparativa Normalizada", fontsize=14, weight='bold')
         ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1))
 
         st.pyplot(fig)
+    else:
+        st.warning("No se encontraron las columnas necesarias para el gráfico de radar.")
 else:
     st.error("No se encontró el archivo de datos. Asegúrate de que esté en el directorio correcto.")
