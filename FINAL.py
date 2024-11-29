@@ -14,11 +14,6 @@ st.title('Dashboard de Puntajes y Estratos por Departamento')
 # Verificar si el archivo Parquet existe
 # Cargar el archivo Parquet
 df = pd.read_parquet(file_path)
-st.dataframe(df.head())
-
-# Mostrar los nombres de las columnas
-st.write("Nombres de las columnas en el DataFrame:")
-st.write(df.columns.tolist())
 
 try:
     # Realizar el procesamiento previo (asegurándonos de limpiar correctamente los datos)
