@@ -3,6 +3,9 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 import streamlit as st
 import os
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
 
 # Definir la ruta del archivo Parquet
 file_path = 'parquet.parquet'  # Cambiado a ruta relativa
@@ -128,6 +131,79 @@ try:
     # Ajustar el diseño para evitar el recorte de etiquetas
     plt.tight_layout()
 
+    # Mostrar el gráfico
+    st.pyplot(plt)
+
+
+    # Supongamos que tienes el DataFrame original df_radar ya procesado
+    # Normalizar las columnas numéricas usando Min-Max
+    df_limpio_normalizado = df_limpio.copy()
+    columnas_a_normalizar = ['FAMI_ESTRATOVIVIENDA', 'FAMI_EDUCACIONPADRE', 'FAMI_EDUCACIONMADRE', 
+                             'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'FAMI_NUMLIBROS']
+    
+    for columna in columnas_a_normalizar:
+        min_val = df_limpio_normalizado[columna].min()
+        max_val = df_limpio_normalizado[columna].max()
+        df_limpio_normalizado[columna] = (df_limpio_normalizado[columna] - min_val) / (max_val - min_val)
+    
+    # Filtrar los datos normalizados para Bogotá y Chocó
+    mejor_data_normalizado = df_limpio_normalizado[df_limpio_normalizado['ESTU_DEPTO_RESIDE'] == mejor_departamento['ESTU_DEPTO_RESIDE']]
+    peor_data_normalizado = df_limpio_normalizado[df_limpio_normalizado['ESTU_DEPTO_RESIDE'] == peor_departamento['ESTU_DEPTO_RESIDE']]
+    
+    # Calcular los promedios normalizados
+    promedios_mejor_normalizados = mejor_data_normalizado[columnas_a_normalizar].mean()
+    promedios_peor_normalizados = peor_data_normalizado[columnas_a_normalizar].mean()
+    
+    # Mejorar los nombres de las etiquetas para que sean más descriptivos
+    nuevas_etiquetas = [
+        'Estrato de Vivienda', 
+        'Nivel Educativo del Padre', 
+        'Nivel Educativo de la Madre', 
+        'Acceso a Internet', 
+        'Disponibilidad de Computadora', 
+        'Número de Libros del Hogar'
+    ]
+    
+    # Crear gráfico de radar
+    # Preparar los datos para el radar
+    promedios_mejor = promedios_mejor_normalizados.tolist()
+    promedios_peor = promedios_peor_normalizados.tolist()
+    
+    # Número de categorías
+    num_vars = len(nuevas_etiquetas)
+    angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
+    angles += angles[:1]  # Cerrar el gráfico
+    
+    promedios_mejor += promedios_mejor[:1]
+    promedios_peor += promedios_peor[:1]
+    
+    # Nombres departamntos
+    
+    mejor_nombre=mejor_departamento['ESTU_DEPTO_RESIDE']
+    peor_nombre=peor_departamento['ESTU_DEPTO_RESIDE']
+    
+    # Crear la figura y los ejes
+    fig, ax = plt.subplots(figsize=(7, 7), dpi=100, subplot_kw=dict(polar=True))
+    
+    # Crear gráfico de radar para Bogotá
+    ax.plot(angles, promedios_mejor, color='green', linewidth=2, linestyle='solid', label=mejor_nombre)
+    ax.fill(angles, promedios_mejor, color='green', alpha=0.25)
+    
+    # Crear gráfico de radar para Chocó
+    ax.plot(angles, promedios_peor, color='red', linewidth=2, linestyle='solid', label=peor_nombre)
+    ax.fill(angles, promedios_peor, color='red', alpha=0.25)
+    
+    # Añadir etiquetas con letras negras y tamaño 10
+    ax.set_yticklabels([])
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(nuevas_etiquetas, fontsize=10, color='black', fontweight='bold')  # Etiquetas con tamaño 10
+    
+    # Título y leyenda con tamaño de letra 10
+    ax.set_title('Comparación Normalizada entre Mejor y Peor', fontsize=12, color='black', fontweight='bold', y=1.1)  # Título con tamaño 10
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), fontsize=10, frameon=True, shadow=True, fancybox=True)  # Leyenda con tamaño 10
+    
+    # Ajustar el diseño para evitar recortes
+    plt.tight_layout()
     # Mostrar el gráfico
     st.pyplot(plt)
     
