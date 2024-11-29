@@ -1,18 +1,17 @@
-import streamlit as st
 import pandas as pd
+import seaborn as sns
+import matplotlib.pyplot as plt
+import streamlit as st
+import os
 
-# Título de la aplicación
-st.title("Visualizador de archivos Parquet")
+# Definir la ruta del archivo Parquet
+file_path = 'DatosParquet_reducido.parquet'  # Cambiado a ruta relativa
 
-# Leer el archivo Parquet
-try:
-    # Cambia la ruta al archivo si está en otro lugar
-    df = pd.read_parquet('DatosParquet.parquet')
-    st.write("Archivo cargado exitosamente!")
-    
-    # Mostrar las primeras filas del DataFrame
-    st.write("Primeras filas del DataFrame:")
-    st.dataframe(df.head())  # Mostrar solo las primeras 5 filas
-    
-except Exception as e:
-    st.error(f"Error al cargar el archivo Parquet: {e}")
+# Configuración de estilo
+st.set_page_config(page_title="Dashboard de Puntajes y Estratos", layout="wide")
+st.title('Dashboard de Puntajes y Estratos por Departamento')
+
+# Verificar si el archivo Parquet existe
+# Cargar el archivo Parquet
+df = pd.read_parquet(file_path)
+st.dataframe(df.head())
