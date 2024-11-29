@@ -131,5 +131,6 @@ try:
     # Mostrar el gráfico
     st.pyplot(plt)
     
+    
 except Exception as e:
     st.error(f"Error al cargar el archivo Parquet: {e}")
