@@ -71,20 +71,6 @@ try:
     # Reemplazar libros
     df_limpio['FAMI_NUMLIBROS'] = df_limpio['FAMI_NUMLIBROS'].replace(diccionario_libros).astype(float)
     
-
-
-
-
-
-
-
-
-
-
-
-
-
-    
     # Lista de columnas de puntajes disponibles
     puntaje_opciones = [
         'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
@@ -153,18 +139,6 @@ try:
 
     # Mostrar el gráfico
     st.pyplot(plt)
-    
-
-
-
-
-
-
-
-
-
-
-
     
 
     # Supongamos que tienes el DataFrame original df_radar ya procesado
@@ -238,20 +212,7 @@ try:
     plt.tight_layout()
     # Mostrar el gráfico
     st.pyplot(plt)
-    
-    
 
-
-
-
-
-
-
-
-
-
-    
-    
     # Actualizar el diccionario de regiones combinando Insular con Caribe y excluyendo EXTRANJERO
     regiones = {
         'CUNDINAMARCA': 'Andina', 'ANTIOQUIA': 'Andina', 'BOLIVAR': 'Caribe', 'NORTE SANTANDER': 'Andina', 'CAQUETA': 'Amazonia',
@@ -329,21 +290,7 @@ try:
     # Guardar el gráfico con fondo blanco
     plt.tight_layout()
     st.pyplot(plt)
-    
-    
-
-
-
-
-
-
-
-
-
-
-
-    
-
+  
     # Crear el DataFrame con los puntajes
     df_mapa = df[['ESTU_DEPTO_RESIDE', 'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
         'PUNT_SOCIALES_CIUDADANAS', 'PUNT_INGLES', 'PUNT_GLOBAL']]
@@ -395,22 +342,6 @@ try:
     # Agregar coordenadas
     promedios['LATITUD'] = promedios['ESTU_DEPTO_RESIDE'].map(lambda x: coordenadas[x][0] if x in coordenadas else None)
     promedios['LONGITUD'] = promedios['ESTU_DEPTO_RESIDE'].map(lambda x: coordenadas[x][1] if x in coordenadas else None)
-    
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     
     import folium
     import pandas as pd
@@ -488,8 +419,6 @@ try:
     # Integrar el mapa en Streamlit
     st_folium(mapa, width=800, height=500)
 
-
-    
     
 except Exception as e:
     st.error(f"Error al cargar el archivo Parquet: {e}")
