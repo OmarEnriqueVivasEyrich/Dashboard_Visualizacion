@@ -355,38 +355,81 @@ try:
     
     import folium
     
-    # Crear el mapa centrado en una ubicación (Colombia en este caso)
-    mapa = folium.Map(location=[4.5709, -74.2973], zoom_start=5, tiles="OpenStreetMap")
+    # Crear un mapa centrado en Colombia con un zoom adecuado
+    mapa = folium.Map(location=[4.5709, -74.2973], zoom_start=5, control_scale=True)
     
-    # Agregar un marcador de ejemplo
-    folium.Marker(
-        location=[4.6097, -74.0817],  # Ubicación: Bogotá
-        popup="Bogotá, Colombia",
-        icon=folium.Icon(color="blue", icon="info-sign")
-    ).add_to(mapa)
+    # Calcular los límites de los puntajes
+    min_puntaje = promedios[puntaje_seleccionado].min()
+    max_puntaje = promedios[puntaje_seleccionado].max()
     
-    # Agregar un círculo de ejemplo
-    folium.Circle(
-        location=[4.5709, -74.2973],  # Ubicación central
-        radius=100000,  # Radio en metros
-        color="green",
-        fill=True,
-        fill_opacity=0.5,
-        popup="Área de influencia"
-    ).add_to(mapa)
+    # Definir una función para asignar colores según el puntaje
+    def get_color(puntaje):
+        rango = max_puntaje - min_puntaje
+        if rango == 0:  # Evitar divisiones por cero
+            return 'blue'
+        if puntaje >= min_puntaje + 0.67 * rango:
+            return 'red'  # Alto
+        elif puntaje >= min_puntaje + 0.33 * rango:
+            return 'orange'  # Medio
+        else:
+            return 'blue'  # Bajo
     
-    # Guardar el mapa en un archivo HTML
-    mapa.save("mapa_interactivo.html")
+    # Añadir los puntos de los departamentos con sus puntajes
+    for index, row in promedios.iterrows():
+        if pd.notnull(row['LATITUD']) and pd.notnull(row['LONGITUD']):  # Asegurarse de que las coordenadas no estén vacías
+            # Obtener el color basado en el puntaje
+            color = get_color(row[puntaje_seleccionado])
     
-    # Mostrar el mapa según el entorno:
-    # Jupyter Notebook o IPython
-    try:
-        from IPython.display import display
-        display(mapa)  # Muestra el mapa directamente en Jupyter Notebook
-    except ImportError:
-        # Si no estás en Jupyter, abre el mapa guardado en el navegador
-        import webbrowser
-        webbrowser.open("mapa_interactivo.html")
+            # Crear un marcador con el color basado en el puntaje
+            folium.CircleMarker(
+                location=[row['LATITUD'], row['LONGITUD']],
+                radius=10,
+                color=color,
+                fill=True,
+                fill_color=color,
+                fill_opacity=0.6,
+                popup=folium.Popup(
+                    f"<strong>{row['ESTU_DEPTO_RESIDE']}</strong><br>"
+                    f"Puntaje promedio: {round(row[puntaje_seleccionado], 0)}",  # Redondeo a entero
+                    max_width=300
+                ),
+            ).add_to(mapa)
+    
+    # Añadir un título en la parte superior del mapa utilizando un Div
+    title_html = '''
+                 <div style="position: absolute; 
+                              top: 10px; left: 50%; 
+                              transform: translateX(-50%);
+                              font-size: 18px; font-weight: bold; 
+                              background-color: rgba(255, 255, 255, 0.7); 
+                              padding: 5px 15px; 
+                              border-radius: 5px; 
+                              z-index: 9999;">
+                     <h4>Mapa de Puntajes Promedio por Departamento</h4>
+                 </div>
+    '''
+    
+    # Añadir el título al mapa
+    mapa.get_root().html.add_child(folium.Element(title_html))
+    
+    # Crear una leyenda personalizada
+    legend_html = """
+    <div style="position: fixed; 
+                 bottom: 50px; left: 50px; width: 160px; height: 130px; 
+                 background-color: white; opacity: 0.9; z-index: 9999; 
+                 border: 2px solid grey; border-radius: 5px; padding: 10px; font-size: 12px;">
+        <b>Relación Puntaje - Color</b><br>
+        <i style="background: red; width: 20px; height: 20px; display: inline-block; margin-right: 5px;"></i> Alto<br>
+        <i style="background: orange; width: 20px; height: 20px; display: inline-block; margin-right: 5px;"></i> Medio<br>
+        <i style="background: blue; width: 20px; height: 20px; display: inline-block; margin-right: 5px;"></i> Bajo
+    </div>
+    """
+    
+    # Añadir la leyenda al mapa
+    mapa.get_root().html.add_child(folium.Element(legend_html))
+    
+    # Mostrar el mapa
+    mapa
 
     
     
