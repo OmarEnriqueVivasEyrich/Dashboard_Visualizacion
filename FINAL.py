@@ -16,6 +16,10 @@ st.title('Dashboard de Puntajes y Estratos por Departamento')
 df = pd.read_parquet(file_path)
 st.dataframe(df.head())
 
+# Mostrar los nombres de las columnas
+st.write("Nombres de las columnas en el DataFrame:")
+st.write(df.columns.tolist())
+
 try:
     # Realizar el procesamiento previo (asegurándonos de limpiar correctamente los datos)
     df_limpio = df[['ESTU_DEPTO_RESIDE', 'FAMI_ESTRATOVIVIENDA', 'FAMI_EDUCACIONPADRE', 'FAMI_EDUCACIONMADRE', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'FAMI_NUMLIBROS', 'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
