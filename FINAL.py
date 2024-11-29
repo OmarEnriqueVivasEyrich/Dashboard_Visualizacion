@@ -85,17 +85,12 @@ try:
 
 
     
-    import matplotlib.pyplot as plt
-    import pandas as pd
-    import seaborn as sns
-    import streamlit as st
-    
     # Lista de columnas de puntajes disponibles
     puntaje_opciones = [
         'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
         'PUNT_SOCIALES_CIUDADANAS', 'PUNT_INGLES', 'PUNT_GLOBAL'
     ]
-    
+
     # Preguntar al usuario qué puntaje desea utilizar
     puntaje_seleccionado = st.selectbox(
         "Seleccione el puntaje para realizar el gráfico:",
@@ -103,51 +98,62 @@ try:
     )
     
     st.write(f"Ha seleccionado: {puntaje_seleccionado}")
-    
+
     # Agrupar por ESTU_DEPTO_RESIDE y calcular la media del puntaje seleccionado
     df_agrupado = df_limpio.groupby('ESTU_DEPTO_RESIDE')[puntaje_seleccionado].mean().reset_index()
-    
+
     # Identificar el mejor y peor departamento según el puntaje seleccionado
     mejor_departamento = df_agrupado.loc[df_agrupado[puntaje_seleccionado].idxmax()]
     peor_departamento = df_agrupado.loc[df_agrupado[puntaje_seleccionado].idxmin()]
-    
+
     # Crear un DataFrame con solo el mejor y peor departamento
     df_comparacion = pd.DataFrame([mejor_departamento, peor_departamento])
-    
+
+    # Configurar el estilo de seaborn
+    sns.set(style="whitegrid")
+
+    # Crear un gráfico de barras horizontales para el puntaje seleccionado
+    plt.figure(figsize=(14, 8))
+
     # Ordenar los datos de mayor a menor
     df_comparacion = df_comparacion.sort_values(by=puntaje_seleccionado, ascending=False)
-    
-    # Crear un gráfico de barras horizontales para el puntaje seleccionado
-    fig, ax = plt.subplots(figsize=(6, 3))  # Tamaño más pequeño aún
-    
-    # Crear el gráfico de barras horizontales usando matplotlib
-    ax.barh(df_comparacion['ESTU_DEPTO_RESIDE'], df_comparacion[puntaje_seleccionado],
-            color=['#006400', '#8B0000'])
-    
+
+    # Crear el gráfico de barras horizontales
+    bar_plot = sns.barplot(data=df_comparacion, y='ESTU_DEPTO_RESIDE', x=puntaje_seleccionado, 
+                           palette=['#006400', '#8B0000'])
+
     # Título llamativo con negrita
-    ax.set_title(f'Comparativa del {puntaje_seleccionado.replace("_", " ")}: Mejor vs Peor Departamento', 
-                  fontsize=10, weight='bold', color='black')
-    
-    # Etiquetas de los ejes en negrita y tamaño 10
-    ax.set_xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=10, fontweight='bold')
-    ax.set_ylabel('Departamento', fontsize=10, fontweight='bold')
-    
-    # Añadir los valores redondeados en el centro de las barras, en blanco
-    for i in range(len(df_comparacion)):
-        ax.text(df_comparacion[puntaje_seleccionado].iloc[i] / 2, i,
-                f'{round(df_comparacion[puntaje_seleccionado].iloc[i])}', ha='center', va='center',
-                fontsize=10, fontweight='bold', color='white')
-    
+    plt.title(f'Comparativa del {puntaje_seleccionado.replace("_", " ")}: Mejor vs Peor Departamento', 
+              fontsize=18, weight='bold', color='black')
+
+    # Etiquetas de los ejes en negrita y tamaño 16
+    plt.xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=16, fontweight='bold')
+    plt.ylabel('Departamento', fontsize=16, fontweight='bold')
+
     # Cambiar tamaño de fuente de los nombres de los departamentos y ponerlos en negrita
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=10, fontweight='bold', color='black')
-    
+    bar_plot.set_yticklabels(bar_plot.get_yticklabels(), fontsize=16, fontweight='bold', color='black')
+
+    # Añadir los valores redondeados en el centro de las barras, en blanco
+    for p in bar_plot.patches:
+        value = round(p.get_width())  # Redondear el valor a entero
+        bar_plot.annotate(f'{value}', 
+                          (p.get_width() / 2, p.get_y() + p.get_height() / 2.),  # Posicionar en el centro de la barra
+                          ha='center', va='center', fontsize=16, fontweight='bold', color='white')  # Texto blanco
+
+    # Fondo blanco para la figura y los ejes
+    fig = plt.gcf()
+    fig.patch.set_facecolor('white')
+    plt.gca().set_facecolor('white')
+
+    # Hacer los números del eje X de tamaño 16
+    plt.tick_params(axis='x', labelsize=16)
+
     # Ajustar el diseño para evitar el recorte de etiquetas
     plt.tight_layout()
-    
+
     # Mostrar el gráfico
-    st.pyplot(fig)
+    st.pyplot(plt)
     
-        
 
 
 
