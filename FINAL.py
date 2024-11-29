@@ -118,7 +118,7 @@ try:
     df_comparacion = df_comparacion.sort_values(by=puntaje_seleccionado, ascending=False)
     
     # Crear un gráfico de barras horizontales para el puntaje seleccionado
-    fig, ax = plt.subplots(figsize=(8, 4))  # Tamaño más pequeño
+    fig, ax = plt.subplots(figsize=(6, 3))  # Tamaño más pequeño aún
     
     # Crear el gráfico de barras horizontales usando matplotlib
     ax.barh(df_comparacion['ESTU_DEPTO_RESIDE'], df_comparacion[puntaje_seleccionado],
@@ -126,29 +126,28 @@ try:
     
     # Título llamativo con negrita
     ax.set_title(f'Comparativa del {puntaje_seleccionado.replace("_", " ")}: Mejor vs Peor Departamento', 
-                  fontsize=14, weight='bold', color='black')
+                  fontsize=10, weight='bold', color='black')
     
-    # Etiquetas de los ejes en negrita y tamaño 12
-    ax.set_xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=12, fontweight='bold')
-    ax.set_ylabel('Departamento', fontsize=12, fontweight='bold')
+    # Etiquetas de los ejes en negrita y tamaño 10
+    ax.set_xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=10, fontweight='bold')
+    ax.set_ylabel('Departamento', fontsize=10, fontweight='bold')
     
     # Añadir los valores redondeados en el centro de las barras, en blanco
     for i in range(len(df_comparacion)):
         ax.text(df_comparacion[puntaje_seleccionado].iloc[i] / 2, i,
                 f'{round(df_comparacion[puntaje_seleccionado].iloc[i])}', ha='center', va='center',
-                fontsize=12, fontweight='bold', color='white')
+                fontsize=10, fontweight='bold', color='white')
     
     # Cambiar tamaño de fuente de los nombres de los departamentos y ponerlos en negrita
-    ax.set_yticklabels(ax.get_yticklabels(), fontsize=12, fontweight='bold', color='black')
+    ax.set_yticklabels(ax.get_yticklabels(), fontsize=10, fontweight='bold', color='black')
     
     # Ajustar el diseño para evitar el recorte de etiquetas
     plt.tight_layout()
     
     # Mostrar el gráfico
     st.pyplot(fig)
-
-
     
+        
 
 
 
