@@ -2,7 +2,9 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import streamlit as st
+import os
 import numpy as np
+import folium
 
 # Definir la ruta del archivo Parquet
 file_path = 'parquet.parquet'  # Cambiado a ruta relativa
@@ -18,7 +20,7 @@ df = pd.read_parquet(file_path)
 try:
     # Realizar el procesamiento previo (asegurándonos de limpiar correctamente los datos)
     df_limpio = df[['ESTU_DEPTO_RESIDE', 'FAMI_ESTRATOVIVIENDA', 'FAMI_EDUCACIONPADRE', 'FAMI_EDUCACIONMADRE', 'FAMI_TIENEINTERNET', 'FAMI_TIENECOMPUTADOR', 'FAMI_NUMLIBROS', 'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
-                         'PUNT_SOCIALES_CIUDADANAS', 'PUNT_INGLES', 'PUNT_GLOBAL']]
+                   'PUNT_SOCIALES_CIUDADANAS', 'PUNT_INGLES', 'PUNT_GLOBAL']]
 
     # Reemplazar y convertir FAMI_ESTRATOVIVIENDA
     df_limpio['FAMI_ESTRATOVIVIENDA'] = df_limpio['FAMI_ESTRATOVIVIENDA'].replace({'Sin Estrato': None}).str.replace('Estrato ', '', regex=False).astype(float)
@@ -90,7 +92,7 @@ try:
     sns.set(style="whitegrid")
 
     # Crear un gráfico de barras horizontales para el puntaje seleccionado
-    fig, ax = plt.subplots(figsize=(14, 8))
+    plt.figure(figsize=(14, 8))
 
     # Ordenar los datos de mayor a menor
     df_comparacion = df_comparacion.sort_values(by=puntaje_seleccionado, ascending=False)
@@ -100,11 +102,12 @@ try:
                            palette=['#006400', '#8B0000'])
 
     # Título llamativo con negrita
-    ax.set_title(f'Comparativa del {puntaje_seleccionado.replace("_", " ")}: Mejor vs Peor Departamento', fontsize=18, weight='bold', color='black')
+    plt.title(f'Comparativa del {puntaje_seleccionado.replace("_", " ")}: Mejor vs Peor Departamento', 
+              fontsize=18, weight='bold', color='black')
 
     # Etiquetas de los ejes en negrita y tamaño 16
-    ax.set_xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=16, fontweight='bold')
-    ax.set_ylabel('Departamento', fontsize=16, fontweight='bold')
+    plt.xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=16, fontweight='bold')
+    plt.ylabel('Departamento', fontsize=16, fontweight='bold')
 
     # Cambiar tamaño de fuente de los nombres de los departamentos y ponerlos en negrita
     bar_plot.set_yticklabels(bar_plot.get_yticklabels(), fontsize=16, fontweight='bold', color='black')
@@ -116,8 +119,19 @@ try:
                           (p.get_width() / 2, p.get_y() + p.get_height() / 2.),  # Posicionar en el centro de la barra
                           ha='center', va='center', fontsize=16, fontweight='bold', color='white')  # Texto blanco
 
+    # Fondo blanco para la figura y los ejes
+    fig = plt.gcf()
+    fig.patch.set_facecolor('white')
+    plt.gca().set_facecolor('white')
+
+    # Hacer los números del eje X de tamaño 16
+    plt.tick_params(axis='x', labelsize=16)
+
+    # Ajustar el diseño para evitar el recorte de etiquetas
+    plt.tight_layout()
+
     # Mostrar el gráfico
-    st.pyplot(fig)
+    st.pyplot(plt)
 
     # Supongamos que tienes el DataFrame original df_radar ya procesado
     # Normalizar las columnas numéricas usando Min-Max
@@ -137,38 +151,59 @@ try:
     # Calcular los promedios normalizados
     promedios_mejor_normalizados = mejor_data_normalizado[columnas_a_normalizar].mean()
     promedios_peor_normalizados = peor_data_normalizado[columnas_a_normalizar].mean()
+    
+    # Mejorar los nombres de las etiquetas para que sean más descriptivos
+    nuevas_etiquetas = [
+        'Estrato de Vivienda', 
+        'Nivel Educativo del Padre', 
+        'Nivel Educativo de la Madre', 
+        'Acceso a Internet', 
+        'Acceso a Computadora', 
+        'Número de Libros en Casa'
+    ]
+    
+    # Generar gráfico de radar con los promedios normalizados
+    categories = nuevas_etiquetas
+    values_mejor = promedios_mejor_normalizados
+    values_peor = promedios_peor_normalizados
 
-    # Crear gráfico de radar
-    # Preparar los datos para el radar
-    promedios_mejor = promedios_mejor_normalizados.tolist()
-    promedios_peor = promedios_peor_normalizados.tolist()
+    # Gráfico de Radar
+    fig, ax = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
 
     # Número de categorías
-    num_vars = len(columnas_a_normalizar)
+    num_vars = len(categories)
+
+    # Ángulos para las categorías
     angles = np.linspace(0, 2 * np.pi, num_vars, endpoint=False).tolist()
 
-    # Completar el ciclo del gráfico radar
-    promedios_mejor += promedios_mejor[:1]
-    promedios_peor += promedios_peor[:1]
+    # Hacer que el gráfico sea circular cerrando el ciclo
+    values_mejor = values_mejor.tolist()
+    values_mejor += values_mejor[:1]
+    values_peor = values_peor.tolist()
+    values_peor += values_peor[:1]
     angles += angles[:1]
 
-    fig_radar, ax_radar = plt.subplots(figsize=(8, 8), subplot_kw=dict(polar=True))
+    # Graficar las líneas de las dos series
+    ax.plot(angles, values_mejor, linewidth=2, linestyle='solid', label='Mejor Departamento', color='green')
+    ax.plot(angles, values_peor, linewidth=2, linestyle='solid', label='Peor Departamento', color='red')
 
-    # Ploteo de las líneas para cada departamento
-    ax_radar.plot(angles, promedios_mejor, linewidth=2, linestyle='solid', label=mejor_departamento['ESTU_DEPTO_RESIDE'], color='green')
-    ax_radar.fill(angles, promedios_mejor, alpha=0.25, color='green')
+    # Rellenar las áreas de las líneas
+    ax.fill(angles, values_mejor, color='green', alpha=0.25)
+    ax.fill(angles, values_peor, color='red', alpha=0.25)
 
-    ax_radar.plot(angles, promedios_peor, linewidth=2, linestyle='solid', label=peor_departamento['ESTU_DEPTO_RESIDE'], color='red')
-    ax_radar.fill(angles, promedios_peor, alpha=0.25, color='red')
+    # Añadir etiquetas
+    ax.set_yticklabels([])
+    ax.set_xticks(angles[:-1])
+    ax.set_xticklabels(categories, fontsize=12, fontweight='bold')
 
-    # Añadir etiquetas y título
-    ax_radar.set_yticklabels([])
-    ax_radar.set_xticks(angles[:-1])
-    ax_radar.set_xticklabels(columnas_a_normalizar, fontsize=12, fontweight='bold')
+    # Título
+    ax.set_title('Comparación Normalizada: Mejor vs Peor Departamento', size=16, color='black', fontweight='bold')
 
-    ax_radar.set_title(f'Comparación Radar: {mejor_departamento["ESTU_DEPTO_RESIDE"]} vs {peor_departamento["ESTU_DEPTO_RESIDE"]}', size=16, weight='bold')
+    # Leyenda
+    ax.legend(loc='upper right', fontsize=12, frameon=False)
 
-    st.pyplot(fig_radar)
+    # Mostrar el gráfico
+    st.pyplot(fig)
 
 except Exception as e:
-    st.error(f"Error al procesar los datos: {e}")
+    st.write(f"Error al procesar el archivo Parquet: {e}")
