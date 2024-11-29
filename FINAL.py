@@ -62,10 +62,6 @@ try:
     # Reemplazar libros
     df_limpio['FAMI_NUMLIBROS'] = df_limpio['FAMI_NUMLIBROS'].replace(diccionario_libros).astype(float)
 
-    # Mostrar el DataFrame limpio
-    st.write("DataFrame limpio:")
-    st.dataframe(df_limpio)
-
     # Lista de columnas de puntajes disponibles
     puntaje_opciones = [
         'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
