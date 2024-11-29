@@ -85,35 +85,45 @@ try:
 
 
     
-    # Lista de columnas de puntajes disponibles
-    puntaje_opciones = [
-        'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
-        'PUNT_SOCIALES_CIUDADANAS', 'PUNT_INGLES', 'PUNT_GLOBAL'
-    ]
+   import matplotlib.pyplot as plt
+import pandas as pd
+import seaborn as sns
+import streamlit as st
+import numpy as np
 
-    # Preguntar al usuario qué puntaje desea utilizar
-    puntaje_seleccionado = st.selectbox(
-        "Seleccione el puntaje para realizar el gráfico:",
-        puntaje_opciones
-    )
-    
-    st.write(f"Ha seleccionado: {puntaje_seleccionado}")
+# Lista de columnas de puntajes disponibles
+puntaje_opciones = [
+    'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
+    'PUNT_SOCIALES_CIUDADANAS', 'PUNT_INGLES', 'PUNT_GLOBAL'
+]
 
-    # Agrupar por ESTU_DEPTO_RESIDE y calcular la media del puntaje seleccionado
-    df_agrupado = df_limpio.groupby('ESTU_DEPTO_RESIDE')[puntaje_seleccionado].mean().reset_index()
+# Preguntar al usuario qué puntaje desea utilizar
+puntaje_seleccionado = st.selectbox(
+    "Seleccione el puntaje para realizar el gráfico:",
+    puntaje_opciones
+)
 
-    # Identificar el mejor y peor departamento según el puntaje seleccionado
-    mejor_departamento = df_agrupado.loc[df_agrupado[puntaje_seleccionado].idxmax()]
-    peor_departamento = df_agrupado.loc[df_agrupado[puntaje_seleccionado].idxmin()]
+st.write(f"Ha seleccionado: {puntaje_seleccionado}")
 
-    # Crear un DataFrame con solo el mejor y peor departamento
-    df_comparacion = pd.DataFrame([mejor_departamento, peor_departamento])
+# Agrupar por ESTU_DEPTO_RESIDE y calcular la media del puntaje seleccionado
+df_agrupado = df_limpio.groupby('ESTU_DEPTO_RESIDE')[puntaje_seleccionado].mean().reset_index()
 
-    # Configurar el estilo de seaborn
-    sns.set(style="whitegrid")
+# Identificar el mejor y peor departamento según el puntaje seleccionado
+mejor_departamento = df_agrupado.loc[df_agrupado[puntaje_seleccionado].idxmax()]
+peor_departamento = df_agrupado.loc[df_agrupado[puntaje_seleccionado].idxmin()]
 
+# Crear un DataFrame con solo el mejor y peor departamento
+df_comparacion = pd.DataFrame([mejor_departamento, peor_departamento])
+
+# Configurar el estilo de seaborn
+sns.set(style="whitegrid")
+
+# Crear gráfico de barras horizontales en una columna
+col1, col2 = st.columns(2)
+
+with col1:
     # Crear un gráfico de barras horizontales para el puntaje seleccionado
-    plt.figure(figsize=(14, 8))
+    plt.figure(figsize=(6, 3))
 
     # Ordenar los datos de mayor a menor
     df_comparacion = df_comparacion.sort_values(by=puntaje_seleccionado, ascending=False)
@@ -124,49 +134,26 @@ try:
 
     # Título llamativo con negrita
     plt.title(f'Comparativa del {puntaje_seleccionado.replace("_", " ")}: Mejor vs Peor Departamento', 
-              fontsize=18, weight='bold', color='black')
+              fontsize=10, weight='bold', color='black')
 
-    # Etiquetas de los ejes en negrita y tamaño 16
-    plt.xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=16, fontweight='bold')
-    plt.ylabel('Departamento', fontsize=16, fontweight='bold')
-
-    # Cambiar tamaño de fuente de los nombres de los departamentos y ponerlos en negrita
-    bar_plot.set_yticklabels(bar_plot.get_yticklabels(), fontsize=16, fontweight='bold', color='black')
+    # Etiquetas de los ejes en negrita y tamaño 10
+    plt.xlabel(f'Media del {puntaje_seleccionado.replace("_", " ")}', fontsize=10, fontweight='bold')
+    plt.ylabel('Departamento', fontsize=10, fontweight='bold')
 
     # Añadir los valores redondeados en el centro de las barras, en blanco
     for p in bar_plot.patches:
         value = round(p.get_width())  # Redondear el valor a entero
         bar_plot.annotate(f'{value}', 
                           (p.get_width() / 2, p.get_y() + p.get_height() / 2.),  # Posicionar en el centro de la barra
-                          ha='center', va='center', fontsize=16, fontweight='bold', color='white')  # Texto blanco
-
-    # Fondo blanco para la figura y los ejes
-    fig = plt.gcf()
-    fig.patch.set_facecolor('white')
-    plt.gca().set_facecolor('white')
-
-    # Hacer los números del eje X de tamaño 16
-    plt.tick_params(axis='x', labelsize=16)
+                          ha='center', va='center', fontsize=10, fontweight='bold', color='white')  # Texto blanco
 
     # Ajustar el diseño para evitar el recorte de etiquetas
     plt.tight_layout()
 
     # Mostrar el gráfico
     st.pyplot(plt)
-    
 
-
-
-
-
-
-
-
-
-
-
-    
-
+with col2:
     # Supongamos que tienes el DataFrame original df_radar ya procesado
     # Normalizar las columnas numéricas usando Min-Max
     df_limpio_normalizado = df_limpio.copy()
@@ -196,7 +183,6 @@ try:
         'Número de Libros del Hogar'
     ]
     
-    # Crear gráfico de radar
     # Preparar los datos para el radar
     promedios_mejor = promedios_mejor_normalizados.tolist()
     promedios_peor = promedios_peor_normalizados.tolist()
@@ -209,35 +195,36 @@ try:
     promedios_mejor += promedios_mejor[:1]
     promedios_peor += promedios_peor[:1]
     
-    # Nombres departamntos
-    
-    mejor_nombre=mejor_departamento['ESTU_DEPTO_RESIDE']
-    peor_nombre=peor_departamento['ESTU_DEPTO_RESIDE']
+    # Nombres de los departamentos
+    mejor_nombre = mejor_departamento['ESTU_DEPTO_RESIDE']
+    peor_nombre = peor_departamento['ESTU_DEPTO_RESIDE']
     
     # Crear la figura y los ejes
     fig, ax = plt.subplots(figsize=(7, 7), dpi=100, subplot_kw=dict(polar=True))
     
-    # Crear gráfico de radar para Bogotá
+    # Crear gráfico de radar para el mejor departamento
     ax.plot(angles, promedios_mejor, color='green', linewidth=2, linestyle='solid', label=mejor_nombre)
     ax.fill(angles, promedios_mejor, color='green', alpha=0.25)
     
-    # Crear gráfico de radar para Chocó
+    # Crear gráfico de radar para el peor departamento
     ax.plot(angles, promedios_peor, color='red', linewidth=2, linestyle='solid', label=peor_nombre)
     ax.fill(angles, promedios_peor, color='red', alpha=0.25)
     
-    # Añadir etiquetas con letras negras y tamaño 10
+    # Añadir etiquetas
     ax.set_yticklabels([])
     ax.set_xticks(angles[:-1])
     ax.set_xticklabels(nuevas_etiquetas, fontsize=10, color='black', fontweight='bold')  # Etiquetas con tamaño 10
     
-    # Título y leyenda con tamaño de letra 10
-    ax.set_title('Comparación Normalizada entre Mejor y Peor', fontsize=12, color='black', fontweight='bold', y=1.1)  # Título con tamaño 10
-    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), fontsize=10, frameon=True, shadow=True, fancybox=True)  # Leyenda con tamaño 10
+    # Título y leyenda
+    ax.set_title('Comparación Normalizada entre Mejor y Peor', fontsize=12, color='black', fontweight='bold', y=1.1)
+    ax.legend(loc='upper right', bbox_to_anchor=(1.3, 1), fontsize=10, frameon=True, shadow=True, fancybox=True)
     
-    # Ajustar el diseño para evitar recortes
+    # Ajustar el diseño
     plt.tight_layout()
+
     # Mostrar el gráfico
-    st.pyplot(plt)
+    st.pyplot(fig)
+
     
     
 
