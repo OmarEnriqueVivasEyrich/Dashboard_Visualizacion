@@ -70,7 +70,9 @@ try:
 
     # Reemplazar libros
     df_limpio['FAMI_NUMLIBROS'] = df_limpio['FAMI_NUMLIBROS'].replace(diccionario_libros).astype(float)
-
+    
+    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
     # Lista de columnas de puntajes disponibles
     puntaje_opciones = [
         'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
@@ -139,6 +141,8 @@ try:
 
     # Mostrar el gráfico
     st.pyplot(plt)
+    
+    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
 
     # Supongamos que tienes el DataFrame original df_radar ya procesado
@@ -212,7 +216,9 @@ try:
     plt.tight_layout()
     # Mostrar el gráfico
     st.pyplot(plt)
-
+    
+    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
     # Actualizar el diccionario de regiones combinando Insular con Caribe y excluyendo EXTRANJERO
     regiones = {
         'CUNDINAMARCA': 'Andina', 'ANTIOQUIA': 'Andina', 'BOLIVAR': 'Caribe', 'NORTE SANTANDER': 'Andina', 'CAQUETA': 'Amazonia',
@@ -290,6 +296,8 @@ try:
     # Guardar el gráfico con fondo blanco
     plt.tight_layout()
     st.pyplot(plt)
+    
+    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
 
     # Crear el DataFrame con los puntajes
     df_mapa = df[['ESTU_DEPTO_RESIDE', 'PUNT_LECTURA_CRITICA', 'PUNT_MATEMATICAS', 'PUNT_C_NATURALES', 
@@ -342,80 +350,44 @@ try:
     # Agregar coordenadas
     promedios['LATITUD'] = promedios['ESTU_DEPTO_RESIDE'].map(lambda x: coordenadas[x][0] if x in coordenadas else None)
     promedios['LONGITUD'] = promedios['ESTU_DEPTO_RESIDE'].map(lambda x: coordenadas[x][1] if x in coordenadas else None)
+    
+    ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+    
+    import folium
+    
+    # Crear el mapa centrado en una ubicación (Colombia en este caso)
+    mapa = folium.Map(location=[4.5709, -74.2973], zoom_start=5, tiles="OpenStreetMap")
+    
+    # Agregar un marcador de ejemplo
+    folium.Marker(
+        location=[4.6097, -74.0817],  # Ubicación: Bogotá
+        popup="Bogotá, Colombia",
+        icon=folium.Icon(color="blue", icon="info-sign")
+    ).add_to(mapa)
+    
+    # Agregar un círculo de ejemplo
+    folium.Circle(
+        location=[4.5709, -74.2973],  # Ubicación central
+        radius=100000,  # Radio en metros
+        color="green",
+        fill=True,
+        fill_opacity=0.5,
+        popup="Área de influencia"
+    ).add_to(mapa)
+    
+    # Guardar el mapa en un archivo HTML
+    mapa.save("mapa_interactivo.html")
+    
+    # Mostrar el mapa según el entorno:
+    # Jupyter Notebook o IPython
+    try:
+        from IPython.display import display
+        display(mapa)  # Muestra el mapa directamente en Jupyter Notebook
+    except ImportError:
+        # Si no estás en Jupyter, abre el mapa guardado en el navegador
+        import webbrowser
+        webbrowser.open("mapa_interactivo.html")
 
-
-    
-    # Crear un mapa centrado en Colombia con un zoom adecuado
-    mapa = folium.Map(location=[4.5709, -74.2973], zoom_start=5, control_scale=True)
-    
-    # Calcular los límites de los puntajes
-    min_puntaje = promedios[puntaje_seleccionado].min()
-    max_puntaje = promedios[puntaje_seleccionado].max()
-    
-    # Definir una función para asignar colores según el puntaje
-    def get_color(puntaje):
-        rango = max_puntaje - min_puntaje
-        if puntaje >= min_puntaje + 0.67 * rango:
-            return 'red'  # Alto
-        elif puntaje >= min_puntaje + 0.33 * rango:
-            return 'orange'  # Medio
-        else:
-            return 'blue'  # Bajo
-    
-    # Añadir los puntos de los departamentos con sus puntajes
-    for index, row in promedios.iterrows():
-        # Obtener el color basado en el puntaje
-        color = get_color(row[puntaje_seleccionado])
-        
-        # Crear un marcador con el color basado en el puntaje
-        folium.CircleMarker(
-            location=[row['LATITUD'], row['LONGITUD']],
-            radius=10,
-            color=color,
-            fill=True,
-            fill_color=color,
-            fill_opacity=0.6,
-            popup=f"<strong>{row['ESTU_DEPTO_RESIDE']}</strong><br>Puntaje promedio: {round(row[puntaje_seleccionado], 0)}",  # Redondeo a entero
-        ).add_to(mapa)
-    
-    # Añadir un título en la parte superior del mapa utilizando un Div
-    title_html = '''
-                 <div style="position: absolute; 
-                              top: 10px; left: 50%; 
-                              transform: translateX(-50%);
-                              font-size: 18px; font-weight: bold; 
-                              background-color: rgba(255, 255, 255, 0.7); 
-                              padding: 5px 15px; 
-                              border-radius: 5px; 
-                              z-index: 9999;">
-                     <h4>Mapa de Puntajes Promedio por Departamento</h4>
-                 </div>
-    '''
-    
-    # Añadir el título al mapa
-    mapa.get_root().html.add_child(folium.Element(title_html))
-    
-    # Crear una leyenda personalizada
-    legend_html = """
-    <div style="position: fixed; 
-                 bottom: 50px; left: 50px; width: 140px; height: 135px; 
-                 background-color: white; opacity: 0.8; z-index:9999; 
-                 border:2px solid grey; padding: 10px;">
-        <h4>Relación (puntaje - calor)</h4>
-        <i style="background: red; width: 20px; height: 20px; display: inline-block;"></i> Alto<br>
-        <i style="background: orange; width: 20px; height: 20px; display: inline-block;"></i> Medio<br>
-        <i style="background: blue; width: 20px; height: 20px; display: inline-block;"></i> Bajo
-    </div>
-    """
-    
-    # Añadir la leyenda al mapa
-    mapa.get_root().html.add_child(folium.Element(legend_html))
-    
-    # Mostrar el mapa
-    mapa
-
-    
-    st.pyplot(plt)
     
     
 except Exception as e:
